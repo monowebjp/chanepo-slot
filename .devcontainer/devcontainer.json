@@ -1,0 +1,16 @@
+{
+  "name": "Vue Overlay with pnpm + TypeScript",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "extensions": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint"]
+    }
+  },
+  "forwardPorts": [5173],
+  "postCreateCommand": "pnpm install"
+}
