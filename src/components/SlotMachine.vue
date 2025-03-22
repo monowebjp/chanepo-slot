@@ -6,39 +6,41 @@
       </div>
     </div>
     <div class="controls">
-      <button @click="startSlot" :disabled="isSpinning">スタート</button>
+      <button @click="startSlot" :disabled="isSpinning || imageList.length === 0">スタート</button>
       <p v-if="isWinner" class="result">🎉 あたり！ 🎉</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-
-// 表示する画像リスト（public/images に配置）
-const imageList = [
-  '/images/a.png',
-  '/images/b.png',
-  '/images/c.png',
-  '/images/d.png',
-  '/images/e.png',
-]
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
 interface SlotColumn {
   currentImage: string
 }
 
-const slotColumns = ref<SlotColumn[]>([
-  { currentImage: imageList[0] },
-  { currentImage: imageList[1] },
-  { currentImage: imageList[2] },
-])
-
+const imageList = ref<string[]>([])
+const slotColumns = ref<SlotColumn[]>([])
 const isSpinning = ref(false)
 const isWinner = ref(false)
 
+onMounted(async () => {
+  try {
+    const res = await axios.get<string[]>('http://localhost:3001/images') // ← Node.js 側APIのURL
+    imageList.value = res.data
+
+    // スロットの初期化（ランダム画像で埋める）
+    slotColumns.value = Array.from({ length: 3 }, () => ({
+      currentImage: getRandomImage(),
+    }))
+  } catch (err) {
+    console.error('画像の取得に失敗しました:', err)
+  }
+})
+
 function startSlot(): void {
-  if (isSpinning.value) return
+  if (isSpinning.value || imageList.value.length === 0) return
 
   isSpinning.value = true
   isWinner.value = false
@@ -49,7 +51,6 @@ function startSlot(): void {
     }
   }, 100)
 
-  // スロット停止までの時間
   setTimeout(() => {
     clearInterval(spinInterval)
     isSpinning.value = false
@@ -60,12 +61,13 @@ function startSlot(): void {
 }
 
 function getRandomImage(): string {
-  const index = Math.floor(Math.random() * imageList.length)
-  return imageList[index]
+  const index = Math.floor(Math.random() * imageList.value.length)
+  return imageList.value[index]
 }
 </script>
 
 <style scoped>
+/* スタイル部分は変更なし */
 .slot-machine {
   display: flex;
   flex-direction: column;
